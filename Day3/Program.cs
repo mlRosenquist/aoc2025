@@ -4,35 +4,27 @@ using System.Collections.Immutable;
 
 var input = File.ReadAllText("input.txt");
 
+PartOne();
 PartTwo();
-void PartOne()
-{
-    var banks = GetBanks();
-    var totalJoltage = banks
+void PartOne() =>
+    Console.WriteLine(GetBanks()
         .Select(x => LargestJoltage(x, 2))
-        .Sum();
-    Console.WriteLine(totalJoltage);
-}
+        .Sum());
 
-void PartTwo()
-{
-    var banks = GetBanks();
-    var enumerable = banks
+void PartTwo() =>
+    Console.WriteLine(GetBanks()
         .Select(x => LargestJoltage(x, 12))
-        .ToImmutableArray();
-    
-    var totalJoltage = enumerable
-        .Sum();
-    Console.WriteLine(totalJoltage);
-}
+        .ToImmutableArray()
+        .Sum());
 
 long LargestJoltage(string bank, int length)
 {
-    var firstDigit = bank[..^(length - 1)].MaxBy(x => int.Parse(x.ToString()));
-    var candidates = new Queue<(int Index, string Value, int MissingValues)>();
-    foreach (var (c, index) in (bank[..^(length - 1)].Zip(Enumerable.Range(0, bank.Length-(length - 1)))))
+    var lastIndexOfFirstDigit = length - 1;
+    var firstDigit = bank[..^lastIndexOfFirstDigit].Max();
+    var candidates = new Queue<(int Index, string Value, int MissingDigits)>();
+    foreach (var (digit, index) in (bank[..^lastIndexOfFirstDigit].Zip(Enumerable.Range(0, bank.Length - lastIndexOfFirstDigit))))
     {
-        if (c == firstDigit)
+        if (digit == firstDigit)
         {
             candidates.Enqueue((index, firstDigit.ToString(), length - 1));
         }
@@ -41,16 +33,16 @@ long LargestJoltage(string bank, int length)
     List<string> results = new List<string>();
     while (candidates.Count != 0)
     {
-        var (index, value, missingValues) = candidates.Dequeue();
+        var (index, value, missingDigits) = candidates.Dequeue();
 
-        if (missingValues == 0)
+        if (missingDigits == 0)
         {
             results.Add(value);
         }
         else
         {
-            var largestValue = GetLargestValue(bank, index + 1, missingValues);
-            candidates.Enqueue((largestValue.Index, value + largestValue.Value, missingValues - 1));
+            var largestValue = GetLargestValue(bank, index + 1, missingDigits);
+            candidates.Enqueue((largestValue.Index, value + largestValue.Value, missingDigits - 1));
         }
     }
 
@@ -61,15 +53,10 @@ long LargestJoltage(string bank, int length)
 {
     var result = (0, 0);
     var subBank = bank[indexOffSet..];
-    foreach (var (c, index) in (subBank.Zip(Enumerable.Range(0, subBank.Length))))
+    var lastIndexOfDigit = missingValues - 1;
+    foreach (var (digit, index) in (subBank.Zip(Enumerable.Range(0, subBank.Length - lastIndexOfDigit))))
     {
-        if (subBank.Length - index < missingValues)
-        {
-            continue;
-        }
-        
-        var value = int.Parse(c.ToString());
-
+        var value = int.Parse(digit.ToString());
         if (value > result.Item2)
         {
             result.Item1 = index + indexOffSet;
@@ -80,6 +67,6 @@ long LargestJoltage(string bank, int length)
 }
 
 ImmutableArray<string> GetBanks() =>
-[
-    ..input.Split("\r\n")
-];
+    [
+        ..input.Split("\r\n")
+    ];
