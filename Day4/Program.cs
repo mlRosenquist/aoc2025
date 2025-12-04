@@ -1,11 +1,11 @@
 ﻿
 using System.Collections.Immutable;
-using System.Net.Mime;
 using System.Numerics;
 using Map = System.Collections.Generic.Dictionary<System.Numerics.Complex, char>;
 
 char Free = '.';
 char PaperRoll = '@';
+const int MaxNeighbors = 3;
 
 Complex North = new Complex(0, -1);
 Complex East = new Complex(1, 0);
@@ -18,67 +18,57 @@ Complex SouthWest = South + West;
 ImmutableArray<Complex> Directions = [North, East, South, West, NorthEast, SouthEast, NorthWest, SouthWest];
 
 PartOne();
+PartTwo();
 void PartOne()
 {
     var input = File.ReadAllText("input.txt");
     var map = GetMap(input);
-    var paperRolls = PaperRollsWithLessThanFourAdjacent(map);
+    var paperRolls = PaperRollsAndAmountAdjacent(map)
+        .Where(x => x.Value < MaxNeighbors)
+        .ToImmutableArray();
     
-    SaveFiles(input, paperRolls);
     Console.WriteLine(paperRolls.Length);
 }
 
-void SaveFiles(string input, ImmutableArray<Complex> paperRolls)
+void PartTwo()
 {
-    var lines = input.Split("\r\n");
-    var height = lines.Length;
-    var width = lines[0].Length;
+    var input = File.ReadAllText("input.txt");
+    var map = GetMap(input);
+    var paperRolls = PaperRollsAndAmountAdjacent(map);
 
-    var updatedLines = Enumerable.Range(0, height)
-        .Select(y => Enumerable.Range(0, width).Select(x => paperRolls.Contains(new(x, y)) ? 'x' : lines[y][x]))
-        .Select(x => new string(x.ToArray()))
-        .ToArray();
-    File.WriteAllLines("originalOutput.txt", lines);
-    File.WriteAllLines("output.txt", updatedLines);
-}
+    var result = new List<Complex>();
 
-ImmutableArray<Complex> PaperRollsWithLessThanFourAdjacent(Map map)
-{
-    var freePositions = map.Where(x => x.Value == PaperRoll)
-        .Select(x => x.Key)
-        .ToImmutableArray();
-    
-    var queue =  new Queue<Complex>(freePositions);
-    var handledPaperRolls = new List<Complex>();
-    while (queue.Count != 0)
+    while (true)
     {
-        var position = queue.Dequeue();
-
-        if (AdjacentPaperRolls(map, position).Length < 4)
+        var removables =  paperRolls.Where(x => x.Value <= MaxNeighbors)
+            .Select(x => (x.Key, x.Value))
+            .ToImmutableArray();
+        if (removables.Length <= 0)
         {
-            handledPaperRolls.Add(position);
-            map[position] = Free;
+            break;
+        }
 
+        foreach (var paperRoll in removables)
+        {
+            result.Add(paperRoll.Key);
+            paperRolls.Remove(paperRoll.Key);
             foreach (var direction in Directions)
             {
-                var adjacent = position + direction;
-                if (map.GetValueOrDefault(adjacent) == PaperRoll)
+                var adjacent = paperRoll.Key + direction;
+                if (paperRolls.TryGetValue(adjacent, out var value))
                 {
-                    queue.Enqueue(adjacent);
-                    
+                    paperRolls[adjacent] = value - 1;
                 }
-            }
+            }       
         }
-        // var adjacentValidPaperRolls = Directions
-        //     .Select(direction => position + direction)
-        //     .Where(potentialPosition =>
-        //         IsPaperRoll(map, potentialPosition) && AdjacentPaperRolls(map, potentialPosition).Length < 4)
-        //     .ToImmutableArray();
-        //
-        // handledPaperRolls.AddRange(adjacentValidPaperRolls);
     }
-    return [..handledPaperRolls.ToImmutableHashSet()];
+
+    Console.WriteLine(result.Count);
 }
+
+Dictionary<Complex, int> PaperRollsAndAmountAdjacent(Map map) =>
+    map.Where(x => x.Value == PaperRoll)
+        .ToDictionary(x => x.Key, x => AdjacentPaperRolls(map, x.Key).Length);
 
 ImmutableArray<Complex> AdjacentPaperRolls(Map map, Complex position) =>
 [
@@ -97,6 +87,6 @@ Map GetMap(string input)
     var width = lines[0].Length;
 
     return Enumerable.Range(0, height)
-        .SelectMany(y => Enumerable.Range(0, width).Select(x => ((new Complex(x, y), lines[y][x]))))
+        .SelectMany(y => Enumerable.Range(0, width).Select(x => (new Complex(x, y), lines[y][x])))
         .ToDictionary(x =>  x.Item1, x => x.Item2);
 }
