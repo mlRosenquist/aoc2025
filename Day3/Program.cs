@@ -42,25 +42,25 @@ long LargestJoltage(string bank, int length)
         else
         {
             var largestValue = GetLargestValue(bank, index + 1, missingDigits);
-            candidates.Enqueue((largestValue.Index, value + largestValue.Value, missingDigits - 1));
+            candidates.Enqueue((largestValue.Index, value + largestValue.Digit, missingDigits - 1));
         }
     }
 
-    return long.Parse(results.MaxBy(long.Parse)!);
+    var largestJoltageAsString = results.MaxBy(long.Parse)!;
+    return long.Parse(largestJoltageAsString);
 }
 
-(int Index, int Value) GetLargestValue(string bank, int indexOffSet, int missingValues)
+(int Index, char Digit) GetLargestValue(string bank, int indexOffSet, int missingValues)
 {
-    var result = (0, 0);
+    (int Index, char Digit) result = (0, '0');
     var subBank = bank[indexOffSet..];
     var lastIndexOfDigit = missingValues - 1;
     foreach (var (digit, index) in (subBank.Zip(Enumerable.Range(0, subBank.Length - lastIndexOfDigit))))
     {
-        var value = int.Parse(digit.ToString());
-        if (value > result.Item2)
+        if (digit > result.Digit)
         {
-            result.Item1 = index + indexOffSet;
-            result.Item2 = value;
+            result.Index = index + indexOffSet;
+            result.Digit = digit;
         }
     }
     return result;
