@@ -24,7 +24,7 @@ void PartOne()
     var input = File.ReadAllText("input.txt");
     var map = GetMap(input);
     var paperRolls = PaperRollsAndAmountAdjacent(map)
-        .Where(x => x.Value < MaxNeighbors)
+        .Where(x => x.Value <= MaxNeighbors)
         .ToImmutableArray();
     
     Console.WriteLine(paperRolls.Length);
