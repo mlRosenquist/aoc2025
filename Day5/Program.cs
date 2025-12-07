@@ -26,11 +26,11 @@ void PartTwo()
 }
 
 ImmutableArray<Range> FreshIngredients(string input) =>
-    [
-        ..input.Split("\r\n")[..amountFreshIngredients]
-            .Select(x => x.Split("-"))
-            .Select(x => new Range(long.Parse(x[0].Trim()), long.Parse(x[1].Trim())))
-    ];
+[
+    ..input.Split("\r\n")[..amountFreshIngredients]
+        .Select(x => x.Split("-"))
+        .Select(x => new Range(long.Parse(x[0].Trim()), long.Parse(x[1].Trim())))
+];
 
 ImmutableArray<long> AvailableIngredients(string input) =>
 [
