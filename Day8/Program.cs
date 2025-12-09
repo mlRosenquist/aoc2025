@@ -36,8 +36,8 @@ BoxPair GetLastPair(ImmutableArray<Box> boxes, List<BoxPair> distances)
     }
 
     return distances[i-1];
-    
 }
+
 List<HashSet<Box>> MakeConnections(ImmutableArray<Box> boxes, List<BoxPair> distances, int take)
 {
     var circuits = boxes
